@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<head>
+<style>
+	body{
+		margin: 0;
+	}
+	
+	#main{
+		width: 800px;
+		margin: 0 auto;
+	}
+	
+	#graph{
+		width: 400px;
+		margin: 0 auto;
+	}
+	
+	.axis text {
+	  font: .75em sans-serif;
+	}
+
+	.axis path,
+	.axis line {
+	  fill: none;
+	  stroke: #000;
+	  shape-rendering: crispEdges;
+	}
+
+	.x.axis path,
+	.y.axis path{
+	  display: none;
+	}
+	
+	.bar:hover{
+		fill: #66ffcc;
+	}
+</style>
+</head>
+<body>
+<script src="d3/d3.min.js" charset ="utf-8"></script>
+<div id="main">
+	<p>
+	Insert data into graph below:
+	<br/>
+	Name:<input type="text" id = "nameText"/>
+	Value:<input type="number" id = "valueNum" />
+	<input type="button" onclick="Add(document.getElementById('nameText').value,document.getElementById('valueNum').value)" value="Add"/>
+	</p>
+	<table></table>
+	<br/>
+	<div id = "graph">
+		<svg/>
+	</div>
+</div>
+<script>
+	var data = [{name:"One",value:1},
+		{name:"Two",value:2},
+		{name:"Three",value:3},
+		{name:"Four",value:4}];
+	var margin = {top:10, bottom: 35, left: 35, right: 10};
+	var cHeight = 400;
+	var cWidth = 300;
+	
+	var svg = d3.select("svg")
+		.attr("width", cWidth + margin.left + margin.right)
+		.attr("height", cHeight + margin.top + margin.bottom)
+	  .append("g")
+		.attr("transform","translate(" + margin.left + "," + margin.top +")");
+	
+	var x = d3.scale.ordinal()
+		.rangeRoundBands([0,cWidth],.1);
+	var y = d3.scale.linear()
+		.range([cHeight,0]);
+		
+	var xAxis = d3.svg.axis()
+		.scale(x)
+		.orient("bottom");
+		
+	var yAxis = d3.svg.axis()
+		.scale(y)
+		.orient("left");
+	
+	svg.append("g")
+		.attr("class","x axis")
+		.attr("transform","translate(0," + cHeight + ")")
+		.call(xAxis);
+		
+	svg.append("g")
+		.attr("class","y axis")
+		.call(yAxis)
+	  .append("text")
+		.attr("transform","rotate(-90)")
+		.attr("y", 6)
+		.attr("dy",".7em")
+		.style("text-anchor","end")
+		.text("Value");
+	
+	var table = d3.select("table");
+	
+	function update(data){
+		var tabVals = d3.keys(data[0]).filter(function(key){ return (key !== "values" && key !== "remove"); });
+		data.forEach(function(d){
+			d.values = tabVals.map(function(name){ return {name:name,val:d[name]}; });
+			d.remove = [d["name"]];
+		});
+		
+		var rows = table.selectAll("tr")
+			.data(data);
+			
+		rows.exit().remove();
+		
+		rows.enter().append("tr");
+		
+		var rowVals = rows.selectAll("td")
+			.data(function(d){ return d.values; });
+		rowVals.exit().remove();
+		rowVals.enter().append("td");
+		rowVals.text(function(d){ return d.val; });
+		
+		var rowBttn = rows.selectAll("button")
+			.data( function(d){ return d.remove; });
+		rowBttn.exit().remove();
+		rowBttn.enter().append("button");
+		rowBttn.text("X").attr("onclick",function(d){ return "Remove(\"" + d + "\")"; });
+		
+		x.domain(data.map(function(d){ return d.name; }));
+		y.domain([0,d3.max(data,function(d){ return d.value; })]);
+		
+		var chart = svg.selectAll("rect")
+			.data(data);
+			
+		chart.exit().remove();
+		
+		chart.enter().append("rect")
+			.attr("class","bar")
+			.attr("y",function(d){ return y(d.value); })
+			.attr("height",function(d){ return cHeight - y(d.value); })
+			.attr("width", x.rangeBand())
+			.attr("x",function(d){ return x(d.name);})
+			.attr("fill","#009999");
+			
+		chart.attr("y",function(d){ return y(d.value); })
+			.attr("height",function(d){ return cHeight - y(d.value); })
+			.attr("width", x.rangeBand())
+			.attr("x",function(d){ return x(d.name);});
+			
+		svg.select(".x.axis")
+			.call(xAxis);
+		svg.select(".y.axis")
+			.call(yAxis);
+	};
+	function Remove(name){
+		for(var i = 0; i < data.length; i++)
+			if(data[i].name === name)
+				data.splice(i,1);
+		update(data);
+	};
+	function Add(name,value){
+		value = +value;
+		data.push({name:name,value:value});
+		document.getElementById("nameText").value = '';
+		document.getElementById("valueNum").value = 0;
+		update(data);
+	}
+	update(data);
+</script>
+</body>
+</html>
