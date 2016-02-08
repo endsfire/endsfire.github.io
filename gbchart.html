@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<head>
+<style>
+	.axis text {
+	  font: 10px sans-serif;
+	}
+
+	.axis path,
+	.axis line {
+	  fill: none;
+	  stroke: #000;
+	  shape-rendering: crispEdges;
+	}
+
+	.x.axis path,
+	.y.axis path{
+	  display: none;
+	}
+</style>
+</head>
+<body>
+<script src="d3/d3.min.js"></script>
+<svg/>
+<br/>
+<button onclick="Swap()">Swap</button>
+<script>
+	var data = [{letter:'A',valueOne:4,valueTwo:7,valueThree:3,valueFour:1},
+		{letter:'B',valueOne:8,valueTwo:2,valueThree:1,valueFour:10},
+		{letter:'C',valueOne:3,valueTwo:6,valueThree:5,valueFour:3},
+		{letter:'D',valueOne:6,valueTwo:7,valueThree:9,valueFour:2}];
+	var dataTwo = [{letter:'X',valueOne:40,valueTwo:7,valueThree:30},
+		{letter:'Y',valueOne:28,valueTwo:62,valueThree:31},
+		{letter:'Z',valueOne:33,valueTwo:66,valueThree:55}];
+	var margin = {top:10, bottom:35, left:35, right:10};
+	var cHeight = 400;
+	var cWidth = 300;
+	var dataType = true;
+	
+	var svg = d3.select("svg")
+		.attr("width",cWidth + margin.left + margin.right)
+		.attr("height",cHeight + margin.top + margin.bottom)
+	  .append("g")
+		.attr("transform","translate(" + margin.left + "," + margin.top +")");
+		
+	var x0 = d3.scale.ordinal()
+		.rangeRoundBands([0,cWidth],.1);
+	var x1 = d3.scale.ordinal();
+	var y = d3.scale.linear()
+		.range([cHeight,0]);
+	var color = d3.scale.ordinal()
+		.range(["#0c605a","#006f56","#199057","#37a144"]);
+	
+	var xAxis = d3.svg.axis()
+		.scale(x0)
+		.orient("bottom");
+		
+	var yAxis = d3.svg.axis()
+		.scale(y)
+		.orient("left");
+	
+	svg.append("g")
+		.attr("class","x axis")
+		.attr("transform","translate(0," + cHeight + ")");
+	
+	svg.append("g")
+		.attr("class","y axis");
+	
+	function update(data){
+		var letters = d3.keys(data[0]).filter(function(key){ return (key !== "letter" && key !== "name" && key !== "values"); });
+		
+		data.forEach(function(d){
+			d.values = letters.map(function(name){ return {name:name, val:+d[name]}; });
+		});
+		
+		x0.domain(data.map(function(d){ return d.letter; }));
+		x1.domain(letters).rangeRoundBands([0,x0.rangeBand()],.05);
+		y.domain([0,d3.max(data,function(d){ return d3.max(d.values,function(d){ return d.val; }); })]);
+		
+		var chart = svg.selectAll(".letter")
+			.data(data);
+		
+		chart.exit().remove();
+		
+		chart.enter().append("g")
+			.attr("class","letter");
+		
+		chart.attr("transform",function(d){ return "translate(" + x0(d.letter) + ",0)"; });
+		
+		var bar = chart.selectAll("rect")
+			.data(function(d){ return d.values; });
+			
+		bar.exit().remove();
+		
+		bar.enter().append("rect")
+			.attr("y",cHeight)
+			.attr("height",0)
+			.attr("width",x1.rangeBand())
+			.attr("x",function(d){ return x1(d.name); });
+		
+		bar.transition()
+			.duration(750)
+			.attr("y",function(d){ return y(d.val); })
+			.attr("height",function(d){ return cHeight - y(d.val); })
+			.attr("width",x1.rangeBand())
+			.attr("x",function(d){ return x1(d.name); })
+			.attr("fill",function(d){ return color(d.name); });
+		
+		svg.select(".x.axis")
+			.transition()
+			.duration(300)
+			.call(xAxis);
+			
+		svg.select(".y.axis")
+			.transition()
+			.duration(300)
+			.call(yAxis);
+	};
+	
+	update(data);
+	
+	function Swap(){
+		dataType = !dataType;
+		if(dataType)
+			update(data);
+		else
+			update(dataTwo);
+	};
+</script>
+</body>
+</html>
