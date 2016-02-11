@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<head>
+<style>
+	.axis text {
+	  font: 10px sans-serif;
+	}
+
+	.axis path,
+	.axis line {
+	  fill: none;
+	  stroke: #000;
+	  shape-rendering: crispEdges;
+	}
+
+	.x.axis path,
+	.y.axis path	{
+	  display: none;
+	}
+</style>
+</head>
+<body>
+<script src = "d3/d3.min.js" charset="utf-8"></script>
+<svg/>
+<script>
+	var data = [{letter:"A", valueOne:{val:4,rad:3}, valueTwo:{val:8,rad:6}, valueThree:{val:6,rad:3}},
+		{letter:"B", valueOne:{val:8,rad:3}, valueTwo:{val:9,rad:1}, valueThree:{val:5,rad:6}},
+		{letter:"C", valueOne:{val:3,rad:8}, valueTwo:{val:6,rad:4}, valueThree:{val:7,rad:4}},
+		{letter:"D", valueOne:{val:6,rad:5}, valueTwo:{val:1,rad:9}, valueThree:{val:10,rad:7}}];
+	var margin = {top:20, bottom: 35, left:35, right:10};
+	var cHeight = 400;
+	var cWidth = 300;
+	
+	var svg = d3.select("svg")
+		.attr("width",cWidth + margin.left + margin.right)
+		.attr("height",cHeight + margin.top + margin.bottom)
+	  .append("g")
+		.attr("transform","translate(" + margin.left + "," + margin.top +")");
+		
+	var x = d3.scale.ordinal()
+		.rangeRoundPoints([0,cWidth],1);
+		
+	var y = d3.scale.linear()
+		.range([cHeight,0]);
+
+	var z = d3.scale.linear()
+		.range([5,20]);
+	
+	var color = d3.scale.category10();
+	
+	var xAxis = d3.svg.axis()
+		.scale(x)
+		.orient("bottom");
+		
+	var yAxis = d3.svg.axis()
+		.scale(y)
+		.orient("left");
+		
+	color.domain(d3.keys(data[0]).filter(function(key){ return key !== "letter"; }));
+	
+	data.forEach(function(d){
+		d.values = color.domain().map(function(name){ return {name:name, letter:d.letter , val: +d[name].val, rad: +d[name].rad}; });
+	});
+	
+	x.domain(data.map(function(d){ return d.letter; }));
+	y.domain([0,d3.max(data,function(d){ return d3.max(d.values,function(d){ return d.val; }); })]);
+	z.domain([0,d3.max(data,function(d){ return d3.max(d.values,function(d){ return d.rad; }); })]);
+	
+	var circ = svg.selectAll(".circ")
+		.data(data)
+	  .enter().append("g")
+		.attr("class","circ");
+	
+	circ.selectAll("circle")
+		.data(function(d){ return d.values; })
+	  .enter().append("circle")
+		.attr("cx", function(d){ return x(d.letter); })
+		.attr("cy", function(d){ return y(d.val); })
+		.attr("r", function(d){ return z(d.rad); })
+		.attr("fill", function(d){ return color(d.name); });
+		
+	svg.append("g")
+		.attr("class","x axis")
+		.attr("transform","translate(0," + cHeight + ")")
+		.call(xAxis);
+		
+	svg.append("g")
+		.attr("class","y axis")
+		.call(yAxis);
+	
+</script>
+</body>
+</html>
