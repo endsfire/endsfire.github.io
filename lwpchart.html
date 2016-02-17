@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<head>
+<style>
+	.line{
+		fill:none;
+		stroke: steelblue;
+		stroke-width: .1em;
+	}
+	.point{
+		fill: steelblue;
+	}
+	.point:hover{
+		fill: maroon;
+	}
+	.axis text {
+	  font: 10px sans-serif;
+	}
+
+	.axis path,
+	.axis line {
+	  fill: none;
+	  stroke: #000;
+	  shape-rendering: crispEdges;
+	}
+
+	.x.axis path,
+	.y.axis path	{
+	  display: none;
+	}
+</style>
+</head>
+<body>
+<script src = "d3/d3.min.js" charset = "utf-8"></script>
+<svg/>
+<script>
+	var data = [{letter:"A",value:3},
+		{letter:"B",value:7},
+		{letter:"C",value:4},
+		{letter:"D",value:3},
+		{letter:"E",value:2}];
+	var margin = {top:10,bottom:35,left:35,right:10};
+	var cHeight = 300;
+	var cWidth = 400;
+	var radius = 5;
+	
+	var svg = d3.select("svg")
+		.attr("width",cWidth + margin.left + margin.right)
+		.attr("height",cHeight + margin.top + margin.bottom)
+	  .append("g")
+		.attr("transform","translate(" + margin.left + "," + margin.top + ")");
+		
+	var x = d3.scale.ordinal()
+		.rangePoints([0,cWidth],1);
+		
+	var y = d3.scale.linear()
+		.range([cHeight,0]);
+		
+	var xAxis = d3.svg.axis()
+		.scale(x)
+		.orient("bottom");
+		
+	var yAxis = d3.svg.axis()
+		.scale(y)
+		.orient("left");
+		
+	var line = d3.svg.line()
+		.x(function(d){ return x(d.letter); })
+		.y(function(d){ return y(d.value); });
+		
+	x.domain(data.map(function(d){ return d.letter; }));
+	y.domain([0,d3.max(data,function(d){ return d.value; })]);
+	
+	svg.append("g")
+		.attr("class","x axis")
+		.attr("transform","translate(0," + cHeight + ")")
+		.call(xAxis);
+		
+	svg.append("g")
+		.attr("class","y axis")
+		.call(yAxis);
+		
+	svg.append("path")
+		.datum(data)
+		.attr("class","line")
+		.attr("d",line);
+	
+	svg.selectAll(".point")
+		.data(data)
+	  .enter().append("circle")
+		.attr("class","point")
+		.attr("cx",function(d){ return x(d.letter); })
+		.attr("cy",function(d){ return y(d.value); })
+		.attr("r",radius);
+	
+</script>
+</body>
+</html>
