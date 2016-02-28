@@ -14,28 +14,32 @@
 </head>
 <body>
 <script src = "d3/d3.min.js" charset = "utf-8"></script>
-<svg/>
+<svg viewBox ="0 0 550 309">
+</svg>
 <script>
-	var backgroundImages = ["images/valleyinmist.jpg","images/bearsinvalley.jpg"]
-	var iBG = 0;
+	var backgroundImages = ["images/valleyinmist.jpg","images/bearsinvalley.jpg"];
+	var slideText = ["This is some introductory text about something.","This is some other text."]
+	var kFrame = 0;
 	
 	var svg = d3.select("svg")
-		.style("background","url("+ backgroundImages[iBG] + ") no-repeat center")
+		.style("background","url("+ backgroundImages[kFrame] + ") no-repeat center")
 		.style("background-size","cover")
 		.on("click",Next);
 	
 	svg.append("text")
-		.text("This is some introductory text about something.")
+		.text(slideText[kFrame])
+		.attr("id","mainText")
 		.attr("fill","white")
-		.attr("transform","translate(100,500)")
-		.style("font","4em sans-serif")
+		.attr("x","0px")
+		.attr("y","150px")
+		.style("font","1em sans-serif")
 		.style("font-weight","bold");
 	
 	function Next(){
-		if(iBG + 1 >= backgroundImages.length)
-			iBG = 0;
+		if(kFrame + 1 >= backgroundImages.length)
+			kFrame = 0;
 		else
-			iBG++;
+			kFrame++;
 			
 		var t0 = svg.transition()
 			.duration(1000)
@@ -43,7 +47,9 @@
 		
 		t0.transition()
 			.style("opacity","1")
-			.style("background","url("+ backgroundImages[iBG] + ") no-repeat center");
+			.style("background","url("+ backgroundImages[kFrame] + ") no-repeat center")
+		  .select("#mainText")
+			.text(slideText[kFrame]);
 	};
 </script>
 </body>
