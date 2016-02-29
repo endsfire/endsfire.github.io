@@ -18,38 +18,88 @@
 </svg>
 <script>
 	var backgroundImages = ["images/valleyinmist.jpg","images/bearsinvalley.jpg"];
-	var slideText = ["This is some introductory text about something.","This is some other text."]
+	var insertText = ["This is some introductory text about something.","This is some other text.","Thank you for your time in watching this!"];
 	var kFrame = 0;
+	var iTimer = 125;
 	
 	var svg = d3.select("svg")
-		.style("background","url("+ backgroundImages[kFrame] + ") no-repeat center")
-		.style("background-size","cover")
-		.on("click",Next);
+		.style("background","url("+ backgroundImages[0] + ") no-repeat center")
+		.style("background-size","cover");
 	
-	svg.append("text")
-		.text(slideText[kFrame])
+	var mText = svg.append("text")
 		.attr("id","mainText")
-		.attr("fill","white")
 		.attr("x","0px")
-		.attr("y","150px")
-		.style("font","1em sans-serif")
-		.style("font-weight","bold");
+		.attr("y","100px")
+		.attr("dy",".25em")
+		.style("font","1em Helvetica Neue")
+		.style("font-weight","bold")
+		.text(".");
+
+	var tBox = mText.node().getBBox();
 	
-	function Next(){
-		if(kFrame + 1 >= backgroundImages.length)
-			kFrame = 0;
-		else
-			kFrame++;
+	svg.insert("rect","#mainText")
+		.attr("id","mainBlock")
+		.attr("x",tBox.x)
+		.attr("y",tBox.y)
+		.attr("width", tBox.width)
+		.attr("height", tBox.height)
+		.attr("fill","white");
+	
+	var fSlide = setInterval(function(){
+		var tNode = d3.select("#mainText");
+		var cLine = tNode.node().childNodes.length;
+		var line = d3.select(tNode.node().childNodes[cLine-1]);
+		var iText = line.text();
+		
+		if(kFrame < 10){
+			if(tNode.text() === ".")
+				tNode.text(" ");
+			else
+				tNode.text(".");
+		}
+		else if(kFrame === 10){
+			iText = insertText[0].slice(0,1);
+			tNode.text(null);
+			tNode.append("tspan").text(iText);
+			ResizeTBlock();
+		}
+		else if((kFrame-10) >= insertText[cLine-1].length){
+			if(cLine + 1 > insertText.length)
+			{
+				clearInterval(fSlide);
+				CleanUp();
+			}
+			else{
+				cLine++;
+				iText = insertText[cLine-1].slice(0,1);
+				tNode.append("tspan")
+					.text(iText)
+					.attr("x","0")
+					.attr("dy",20);
+				ResizeTBlock();
+				kFrame = 10;
+			}
+		}
+		else{
+			iText += insertText[cLine-1].slice((kFrame-10),(kFrame-10) + 1);
+			line.text(iText);
+			ResizeTBlock();
+		}
+		kFrame++;
+	},iTimer);
+	
+	function ResizeTBlock(){
+		var textBox = mText.node().getBBox();
 			
-		var t0 = svg.transition()
+		svg.select("#mainBlock")
+			.attr("width", textBox.width)
+			.attr("height", textBox.height);
+	};
+	function CleanUp(){
+		svg.transition()
+			.delay(1000)
 			.duration(1000)
 			.style("opacity","0");
-		
-		t0.transition()
-			.style("opacity","1")
-			.style("background","url("+ backgroundImages[kFrame] + ") no-repeat center")
-		  .select("#mainText")
-			.text(slideText[kFrame]);
 	};
 </script>
 </body>
