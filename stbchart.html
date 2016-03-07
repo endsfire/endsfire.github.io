@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<head>
+<style>
+	.grid{
+		margin: 0 auto;
+		width: 385px;
+	}
+	[class*='col-'] {
+	  float: left;
+	}
+	.grid:after {
+	  content: "";
+	  display: table;
+	  clear: both;
+	}
+	.col-7-8 {
+	  width: 87.5%;
+	}
+	.col-1-8 {
+	  width: 12.5%;
+	}
+	.color_container{
+		width: 100%;
+		height: 20px;
+		cursor: pointer;
+	}
+	.module{
+		padding: .1em;
+	}
+	.axis text{
+		font: 10px sans-serif;
+	}
+	.axis path,
+	.axis line {
+	  fill: none;
+	  stroke: #000;
+	  shape-rendering: crispEdges;
+	}
+	.x.axis path,
+	.y.axis path{
+		display: none;
+	}
+</style>
+</head>
+<body>
+<script src = "d3/d3.min.js" charset = "utf-8"></script>
+<div class = "grid">
+	<div class = "col-1-8">
+		
+	</div>
+	<div class = "col-7-8">
+		<svg/>
+	</div>
+</div>
+<script>
+	var data = [{group:"One",A:4,B:7,C:3},
+		{group:"Two",A:5,B:4,C:3},
+		{group:"Three",A:3,B:2,C:3},
+		{group:"Four",A:6,B:5,C:2}];
+	var cWidth = 300;
+	var cHeight = 400;
+	var margin = {top:10, bottom:35, left:35, right: 10};
+	var excl = ["group"];
+	
+	var x = d3.scale.ordinal()
+		.rangeRoundBands([0,cWidth],.1);
+		
+	var y = d3.scale.linear()
+		.range([cHeight,0]);
+		
+	var color = d3.scale.ordinal()
+		.range(["#729f98","#283018","#aa863a","#f0eceb"]);
+		
+	var xAxis = d3.svg.axis()
+		.scale(x)
+		.orient("bottom");
+		
+	var yAxis = d3.svg.axis()
+		.scale(y)
+		.orient("left");
+		
+	var svg = d3.select("svg")
+		.attr("width",cWidth + margin.left + margin.right)
+		.attr("height",cHeight + margin.top + margin.bottom)
+	  .append("g")
+		.attr("transform","translate(" + margin.left + "," + margin.top + ")");
+	
+	svg.append("g")
+		.attr("class","x axis")
+		.attr("transform","translate(0," + cHeight + ")");
+		
+	svg.append("g")
+		.attr("class","y axis");
+		
+	color.domain(d3.keys(data[0]).filter(function(key){ return key !== "group"; }));
+	
+	var legend = d3.select(".col-1-8");
+	
+	legend.selectAll(".color_container")
+		.data(color.domain().map(function(name){ return name; }))
+	  .enter().append("div")
+		.attr("class","color_container")
+		.style("background-color",function(d){ return color(d); })
+		.on("click",Visible);
+	
+	data.forEach(function(d){
+		var tot = 0;
+		d.values = color.domain().filter(function(key){ var found = false; for(var i in excl) if(key === excl[i]) found = !found; return !found; }).map(function(name){ return {name:name, cT: tot, val: tot+= +d[name]}; });
+		d.total = tot;
+	});
+	
+	x.domain(data.map(function(d){ return d.group; }));
+	y.domain([0,d3.max(data,function(d){ return d.total; })]);
+	
+	svg.select(".x.axis")
+		.call(xAxis);
+		
+	svg.select(".y.axis")
+		.call(yAxis);
+	
+	generateData();
+
+	function generateData(){
+		var groups = svg.selectAll(".group")
+			.data(data)
+		  .enter().append("g")
+			.attr("class","group")
+			.attr("transform",function(d){ return "translate(" + x(d.group) + ",0)"; });
+		
+		var bars = groups.selectAll("rect")
+			.data(function(d){ return d.values; },function(d){ return d.name; })
+		  .enter().append("rect")
+			.attr("class","type")
+			.attr("width",x.rangeBand())
+			.attr("y",function(d){ return y(d.cT); })
+			.attr("height",0)
+			.attr("fill",function(d){ return color(d.name); });
+			
+		bars.transition()
+			.duration(500)
+			.delay(function(d,i){ return i * 500; })
+			.attr("y",function(d){ return y(d.val); })
+			.attr("height",function(d,i){ return y(d.cT) - y(d.val); });
+	};	
+	function changeData(){
+		data.forEach(function(d){
+			var tot = 0;
+			d.values = color.domain().filter(function(key){ var found = false; for(var i in excl) if(key === excl[i]) found = !found; return !found; }).map(function(name){ return {name:name, cT: tot, val: tot+= +d[name]}; });
+			d.total = tot;
+		});
+		
+		var groups = svg.selectAll(".group")
+			.data(data);
+		
+		var bars = groups.selectAll("rect")
+			.data(function(d){ return d.values; },function(d){ return d.name; });
+			
+		var exitTransition = d3.transition().duration(500).each(function(){
+			bars.exit()
+			  .transition()
+				.attr("y",function(d){ return y(d.cT); })
+				.attr("height",0)
+				.remove();
+		});
+		
+		bars.enter().append("rect")
+			.attr("class","type")
+			.attr("width",x.rangeBand())
+			.attr("y",function(d){ return y(d.cT); })
+			.attr("height",0)
+			.attr("fill",function(d){ return color(d.name); });
+			
+		bars.transition()
+			.duration(500)
+			.attr("y",function(d){ return y(d.val); })
+			.attr("height",function(d,i){ return y(d.cT) - y(d.val); });
+	};
+	function Visible(d){
+		var found = excl.findIndex(function(excl){ return excl === d; });
+		if(found === -1)
+			excl.push(d);
+		else
+			excl.splice(found,1);
+		changeData();
+	};
+	
+</script>
+</body>
+</html>
