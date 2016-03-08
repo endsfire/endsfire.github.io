@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<head>
+<style>
+	.axis text{
+		font: 10px sans-serif;
+	}
+	.axis line{
+		fill: none;
+		stroke: #000;
+		shape-rendering: crispEdges;
+	}
+	.x.axis path,
+	.y.axis path{
+		display:none;
+	}
+</style>
+</head>
+<body>
+<script src = "d3/d3.min.js" charset = "utf-8"></script>
+<svg/>
+<script>
+	var data = [{date:"01-JAN-2010",A:4,B:6,C:3},
+		{date:"01-JAN-2011",A:2,B:1,C:8},
+		{date:"01-JAN-2012",A:6,B:7,C:3},
+		{date:"01-JAN-2013",A:5,B:6,C:8},
+		{date:"01-JAN-2014",A:3,B:5,C:5},
+		{date:"01-JAN-2015",A:4,B:4,C:4},
+		{date:"01-JAN-2016",A:7,B:2,C:5}];
+	var cWidth = 400;
+	var cHeight = 400;
+	var margin = {top:10, bottom:35, left:35, right:20};
+	
+	var x = d3.time.scale()
+		.range([0,cWidth]);
+	
+	var parseDate = d3.time.format("%d-%b-%Y");
+	var formatPerc =  d3.format(".0%");
+	
+	var y = d3.scale.linear()
+		.range([cHeight,0]);
+	
+	var color = d3.scale.ordinal()
+		.range(["#729f98","#283018","#aa863a","#f0eceb"]);
+	
+	var xAxis = d3.svg.axis()
+		.scale(x)
+		.orient("bottom");
+	
+	var yAxis = d3.svg.axis()
+		.scale(y)
+		.orient("left")
+		.tickFormat(formatPerc);
+	
+	var area = d3.svg.area()
+		.x(function(d){ return x(d.date); })
+		.y0(function(d){ return y(d.y0); })
+		.y1(function(d){ return y(d.y0 + d.y); });
+	
+	var stack = d3.layout.stack()
+		.values(function(d){ return d.values });
+	
+	color.domain(d3.keys(data[0]).filter(function(key){ return key!=="date"; }));
+	
+	data.forEach(function(d){
+		var tot = 0;
+		d.date = parseDate.parse(d.date);
+		color.domain().forEach(function(name){ return tot+= d[name]; });
+		d.total = tot;
+	});
+	
+	x.domain(d3.extent(data,function(d){ return d.date; }));
+	
+	var letters = stack(color.domain().map(function(name){  
+		return {name:name, values: data.map(function(d){ return { date: d.date, y: d[name]/d.total }; })};
+	}));
+	
+	var svg = d3.select("svg")
+		.attr("width",cWidth + margin.left + margin.right)
+		.attr("height",cHeight + margin.top + margin.bottom)
+	  .append("g")
+		.attr("transform","translate(" + margin.left + "," + margin.top + ")");
+	
+	var letter = svg.selectAll(".letter")
+		.data(letters)
+	  .enter().append("g")
+		.attr("class","letter");
+	
+	letter.append("path")
+		.attr("d",function(d){ return area(d.values); })
+		.attr("fill",function(d){ return color(d.name) });
+	
+	svg.append("g")
+		.attr("class","x axis")
+		.attr("transform","translate(0," + cHeight + ")")
+		.call(xAxis);
+		
+	svg.append("g")
+		.attr("class","y axis")
+		.call(yAxis);
+	
+</script>
+</body>
+</html>

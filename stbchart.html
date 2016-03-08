@@ -53,6 +53,15 @@
 	</div>
 </div>
 <script>
+	if (!Array.prototype.findIndex) {
+		Array.prototype.findIndex = function(obj, start) {
+			 for (var i = (start || 0), j = this.length; i < j; i++) {
+				 if (this[i] === obj) { return i; }
+			 }
+			 return -1;
+		}
+	}
+
 	var data = [{group:"One",A:4,B:7,C:3},
 		{group:"Two",A:5,B:4,C:3},
 		{group:"Three",A:3,B:2,C:3},
