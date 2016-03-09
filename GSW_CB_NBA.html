@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<head>
+<style>
+	.line{
+		fill:none;
+		stroke: black;
+		stroke-width: .1em;
+	}
+	#score{
+		font: 11px sans-serif;
+		font-weight: bold;
+	}
+	.axis text{
+	  font: 10px sans-serif;
+	}
+	.axis line {
+	  fill: none;
+	  stroke: #AAA;
+	  shape-rendering: crispEdges;
+	}
+	.y.axis path,
+	.x.axis path{
+		display: none;
+	}
+	.grid{
+		margin: 0 auto;
+		width: 65vw;
+	}
+	.grid:after{
+		content = "";
+		display: table;
+		clear: both;
+	}
+	[class*='col-']{
+		float:left;
+	}
+	.col-3-4{
+		width: 75%;
+	}
+	.col-1-4{
+		width: 25%;
+	}
+	.col-2-4{
+		width: 50%;
+	}
+	.team{
+		display: inline;
+		padding: .1em;
+		font: 10px sans-serif;
+		cursor: pointer;
+	}
+	#team_CB{
+		border: .1em #CE1141 solid;
+		background-color: #CE1141;
+		color: white;
+	}
+	#team_GSW{
+		border: .1em #006BB6 solid;
+		background-color: #006BB6;
+		color: white;
+	}
+	.banner{
+		text-align: center;
+		font: 2em sans-serif;
+	}
+	#score{
+		font-weight: bold; 
+		font: 2em sans-serif; 
+		text-align: center;
+		margin: .5em;
+		width: 100%;
+	}
+	#header{
+		font: 5em sans-serif;
+	}
+</style>
+</head>
+<body>
+<script src = "d3/d3.min.js" charset = "utf-8"></script>
+<div class = "grid">
+	<div id = "header">
+		To Catch a Bull
+	</div>
+	<div class = "col-1-4">
+		<input type = "button" class = "team" id = "team_CB" onclick = "DrawLine('95 Chicago Bulls')" value = "95 Chicago Bulls">
+		<input type = "button" class = "team" id = "team_GSW" onclick = "DrawLine('15 Golden State Warriors')" value = "15 Golden State Warriors">
+	</div>
+	<div class = "col-3-4"></div>
+	<br/>
+</div>
+<div class = "grid">
+	<div class = "col-3-4" id =	"svg_container">
+		<svg/>
+	</div>
+	<div class = "col-1-4">
+		<div style = "margin: .5em;">
+			<p>In 1995-1996 season the Chicago Bulls under Michael Jordan went an unprecented 72-10.  Now 20 years later the Golden State Wariors under Stephen Curry hope to surpass them.  Click on the names above the graph to only show one team or both.  And hover over circles to see the final score.</p>
+		</div>
+		<div id="score">
+			
+		</div>
+		<div class = "col-2-4">
+			<div class = "banner" id = "home">
+				
+			</div>
+		</div>
+		<div class = "col-2-4">
+			<div class = "banner" id = "opp" >
+				
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+	if (!Array.prototype.findIndex) {
+		Array.prototype.findIndex = function(obj, start) {
+			 for (var i = (start || 0), j = this.length; i < j; i++) {
+				 if (this[i] === obj) { return i; }
+			 }
+			 return -1;
+		}
+	}
+	var recordData = [[{o:"Charlotte Hornets",sym:"W", ptsT:105, ptsO: 91, rat:1},
+		{o:"Boston Celtics",sym:"W", ptsT:107, ptsO: 85, rat:1},
+		{o:"Toronto Raptors",sym:"W", ptsT:117, ptsO: 108, rat:1},
+		{o:"Cleveland Cavaliers",sym:"W", ptsT:106, ptsO: 88, rat:1},
+		{o:"Portland Trail Blazers",sym:"W", ptsT:110, ptsO: 106, rat:1},
+		{o:"Orlando Magic",sym:"L", ptsT:88, ptsO: 94, rat:.8333},
+		{o:"Cleveland Cavaliers",sym:"W", ptsT:113, ptsO: 94, rat:.8571},
+		{o:"Brooklyn Nets",sym:"W", ptsT:109, ptsO: 94, rat:.8750},
+		{o:"Dallas Mavericks",sym:"W", ptsT:108, ptsO: 102, rat:.8889},
+		{o:"San Antonio Spurs",sym:"W", ptsT:103, ptsO: 94, rat:.9000},
+		{o:"Utah Jazz",sym:"W", ptsT:90, ptsO: 85, rat:.9091},
+		{o:"Seattle Sonics",sym:"L", ptsT:92, ptsO: 97, rat:.8333},
+		{o:"Portland Trail Blazers",sym:"W", ptsT:107, ptsO: 104, rat:.8462},
+		{o:"Memphis Grizzlies",sym:"W", ptsT:94, ptsO: 88, rat:.8571},
+		{o:"Los Angeles Clippers",sym:"W", ptsT:104, ptsO: 98, rat:.8667},
+		{o:"New York Knicks",sym:"W", ptsT:101, ptsO: 94, rat:.8750},
+		{o:"San Antonio Spurs",sym:"W", ptsT:106, ptsO: 87, rat:.8824},
+		{o:"Milwaukee Bucks",sym:"W", ptsT:118, ptsO: 106, rat:.8889},
+		{o:"Orlando Magic",sym:"W", ptsT:112, ptsO: 103, rat:.8947},
+		{o:"Atlanta Hawks",sym:"W", ptsT:127, ptsO: 108, rat:.9000},
+		{o:"Los Angeles Lakers",sym:"W", ptsT:108, ptsO: 88, rat:.9048},
+		{o:"Boston Celtics",sym:"W", ptsT:123, ptsO: 114, rat:.9091},
+		{o:"Dallas Mavericks",sym:"W", ptsT:114, ptsO: 101, rat:.9130},
+		{o:"Toronto Raptors",sym:"W", ptsT:113, ptsO: 104, rat:.9167},
+		{o:"Utah Jazz",sym:"W", ptsT:100, ptsO: 86, rat:.9200},
+		{o:"Indiana Pacers",sym:"L", ptsT:97, ptsO: 103, rat:.8846},
+		{o:"Indiana Pacers",sym:"W", ptsT:120, ptsO: 93, rat:.8889},
+		{o:"Atlanta Hawks",sym:"W", ptsT:95, ptsO: 93, rat:.8929},
+		{o:"Houston Rockets",sym:"W", ptsT:100, ptsO: 86, rat:.8966},
+		{o:"Charlotte Hornets",sym:"W", ptsT:117, ptsO: 93, rat:.9000},
+		{o:"Milwaukee Bucks",sym:"W", ptsT:113, ptsO: 84, rat:.9032},
+		{o:"Seattle Sonics",sym:"W", ptsT:113, ptsO: 87, rat:.9063},
+		{o:"Philadelphia 76ers",sym:"W", ptsT:120, ptsO: 93, rat:.9091},
+		{o:"Washington Bullets",sym:"W", ptsT:116, ptsO: 109, rat:.9118},
+		{o:"Philadelphia 76ers",sym:"W", ptsT:116, ptsO: 104, rat:.9143},
+		{o:"Toronto Raptors",sym:"W", ptsT:92, ptsO: 89, rat:.9167},
+		{o:"Detroit Pistons",sym:"W", ptsT:111, ptsO: 96, rat:.9189},
+		{o:"New York Knicks",sym:"W", ptsT:99, ptsO: 79, rat:.9211},
+		{o:"Memphis Grizzlies",sym:"W", ptsT:104, ptsO: 84, rat:.9231},
+		{o:"Miami Heat",sym:"W", ptsT:102, ptsO: 80, rat:.9250},
+		{o:"Phoenix Suns",sym:"W", ptsT:93, ptsO: 82, rat:.9268},
+		{o:"Houston Rockets",sym:"W", ptsT:98, ptsO: 87, rat:.9286},
+		{o:"Sacramento Kings",sym:"W", ptsT:105, ptsO: 85, rat:.9302},
+		{o:"Los Angeles Lakers",sym:"W", ptsT:99, ptsO: 84, rat:.9318},
+		{o:"Denver Nuggets",sym:"L", ptsT:99, ptsO: 105, rat:.9111},
+		{o:"Phoenix Suns",sym:"L", ptsT:96, ptsO: 106, rat:.8913},
+		{o:"Golden State Warriors",sym:"W", ptsT:99, ptsO: 95, rat:.8936},
+		{o:"Washington Bullets",sym:"W", ptsT:111, ptsO: 98, rat:.8958},
+		{o:"Detroit Pistons",sym:"W", ptsT:112, ptsO: 109, rat:.8980},
+		{o:"Minnesota Timberwolves",sym:"W", ptsT:103, ptsO: 100, rat:.9000},
+		{o:"Indiana Pacers",sym:"W", ptsT:110, ptsO: 102, rat:.9020},
+		{o:"Cleveland Cavaliers",sym:"W", ptsT:106, ptsO: 72, rat:.9038},
+		{o:"Atlanta Hawks",sym:"W", ptsT:96, ptsO: 91, rat:.9057},
+		{o:"Miami Heat",sym:"L", ptsT:104, ptsO: 113, rat:.8889},
+		{o:"Orlando Magic",sym:"W", ptsT:111, ptsO: 91, rat:.8909},
+		{o:"Minnesota Timberwolves",sym:"W", ptsT:120, ptsO: 99, rat:.8929},
+		{o:"Golden State Warriors",sym:"W", ptsT:110, ptsO: 87, rat:.8947},
+		{o:"Boston Celtics",sym:"W", ptsT:107, ptsO: 75, rat:.8966},
+		{o:"Milwaukee Bucks",sym:"W", ptsT:115, ptsO: 106, rat:.8983},
+		{o:"Detroit Pistons",sym:"W", ptsT:102, ptsO: 81, rat:.9000},
+		{o:"New York Knicks",sym:"L", ptsT:72, ptsO: 104, rat:.8852},
+		{o:"Washington Bullets",sym:"W", ptsT:103, ptsO: 86, rat:.8871},
+		{o:"Denver Nuggets",sym:"W", ptsT:108, ptsO: 87, rat:.8889},
+		{o:"Brooklyn Nets",sym:"W", ptsT:97, ptsO: 93, rat:.8906},
+		{o:"Philadelphia 76ers",sym:"W", ptsT:98, ptsO: 94, rat:.8923},
+		{o:"Sacramento Kings",sym:"W", ptsT:89, ptsO: 67, rat:.8939},
+		{o:"New York Knicks",sym:"W", ptsT:107, ptsO: 86, rat:.8955},
+		{o:"Toronto Raptors",sym:"L", ptsT:108, ptsO: 109, rat:.8824},
+		{o:"Atlanta Hawks",sym:"W", ptsT:111, ptsO: 80, rat:.8841},
+		{o:"Los Angeles Clippers",sym:"W", ptsT:106, ptsO: 85, rat:.8857},
+		{o:"Miami Heat",sym:"W", ptsT:110, ptsO: 92, rat:.8873},
+		{o:"Miami Heat",sym:"W", ptsT:100, ptsO: 92, rat:.8889},
+		{o:"Charlotte Hornets",sym:"W", ptsT:126, ptsO: 92, rat:.8904},
+		{o:"Orlando Magic",sym:"W", ptsT:90, ptsO: 86, rat:.8919},
+		{o:"Charlotte Hornets",sym:"L", ptsT:97, ptsO: 98, rat:.8800},
+		{o:"Brooklyn Nets",sym:"W", ptsT:113, ptsO: 100, rat:.8816},
+		{o:"Philadelphia 76ers",sym:"W", ptsT:112, ptsO: 82, rat:.8831},
+		{o:"Cleveland Cavaliers",sym:"W", ptsT:98, ptsO: 72, rat:.8846},
+		{o:"Milwaukee Bucks",sym:"W", ptsT:86, ptsO: 80, rat:.8861},
+		{o:"Detroit Pistons",sym:"W", ptsT:110, ptsO: 79, rat:.8875},
+		{o:"Indiana Pacers",sym:"L", ptsT:99, ptsO: 100, rat:.8765},
+		{o:"Washington Bullets",sym:"W", ptsT:103, ptsO: 93, rat:.8780}],
+		[{o:"New Orleans Pelicans",sym:"W", ptsT:111, ptsO: 95, rat:1},
+		{o:"Houston Rockets",sym:"W", ptsT:112, ptsO: 92, rat:1},
+		{o:"New Orleans Pelicans",sym:"W", ptsT:134, ptsO: 120, rat:1},
+		{o:"Memphis Grizzlies",sym:"W", ptsT:119, ptsO: 69, rat:1},
+		{o:"Los Angeles Clippers",sym:"W", ptsT:112, ptsO: 108, rat:1},
+		{o:"Denver Nuggets",sym:"W", ptsT:119, ptsO: 104, rat:1},
+		{o:"Sacramento Kings",sym:"W", ptsT:103, ptsO: 94, rat:1},
+		{o:"Detroit Pistons",sym:"W", ptsT:109, ptsO: 95, rat:1},
+		{o:"Memphis Grizzlies",sym:"W", ptsT:100, ptsO: 84, rat:1},
+		{o:"Minnesota Timberwolves",sym:"W", ptsT:129, ptsO: 116, rat:1},
+		{o:"Brooklyn Nets",sym:"W", ptsT:107, ptsO: 99, rat:1},
+		{o:"Toronto Raptors",sym:"W", ptsT:115, ptsO: 110, rat:1},
+		{o:"Los Angeles Clippers",sym:"W", ptsT:124, ptsO: 117, rat:1},
+		{o:"Chicago Bulls",sym:"W", ptsT:106, ptsO: 94, rat:1},
+		{o:"Denver Nuggets",sym:"W", ptsT:118, ptsO: 105, rat:1},
+		{o:"Los Angeles Lakers",sym:"W", ptsT:111, ptsO: 77, rat:1},
+		{o:"Phoenix Suns",sym:"W", ptsT:135, ptsO: 116, rat:1},
+		{o:"Sacramento Kings",sym:"W", ptsT:120, ptsO: 101, rat:1},
+		{o:"Utah Jazz",sym:"W", ptsT:106, ptsO: 103, rat:1},
+		{o:"Charlotte Hornets",sym:"W", ptsT:116, ptsO: 99, rat:1},
+		{o:"Toronto Raptors",sym:"W", ptsT:112, ptsO: 109, rat:1},
+		{o:"Brooklyn Nets",sym:"W", ptsT:114, ptsO: 98, rat:1},
+		{o:"Indiana Pacers",sym:"W", ptsT:131, ptsO: 123, rat:1},
+		{o:"Boston Celtics",sym:"W", ptsT:124, ptsO: 119, rat:1},
+		{o:"Milwaukee Bucks",sym:"L", ptsT:95, ptsO: 108, rat:.96},
+		{o:"Phoenix Suns",sym:"W", ptsT:128, ptsO: 103, rat:.9615},
+		{o:"Milwaukee Bucks",sym:"W", ptsT:121, ptsO: 112, rat:.9630},
+		{o:"Utah Jazz",sym:"W", ptsT:103, ptsO: 85, rat:.9643},
+		{o:"Cleveland Cavaliers",sym:"W", ptsT:89, ptsO: 83, rat:.9655},
+		{o:"Sacramento Kings",sym:"W", ptsT:122, ptsO: 103, rat:.9667},
+		{o:"Dallas Mavericks",sym:"L", ptsT:91, ptsO: 114, rat:.9355},
+		{o:"Houston Rockets",sym:"W", ptsT:114, ptsO: 110, rat:.9375},
+		{o:"Denver Nuggets",sym:"W", ptsT:111, ptsO: 108, rat:.9394},
+		{o:"Charlotte Hornets",sym:"W", ptsT:111, ptsO: 101, rat:.9412},
+		{o:"Los Angeles Lakers",sym:"W", ptsT:109, ptsO: 88, rat:.9429},
+		{o:"Portland Trail Blazers",sym:"W", ptsT:128, ptsO: 108, rat:.9444},
+		{o:"Sacramento Kings",sym:"W", ptsT:128, ptsO: 116, rat:.9459},
+		{o:"Miami Heat",sym:"W", ptsT:111, ptsO: 103, rat:.9474},
+		{o:"Denver Nuggets",sym:"L", ptsT:110, ptsO: 112, rat:.9231},
+		{o:"Los Angeles Lakers",sym:"W", ptsT:116, ptsO: 98, rat:.9250},
+		{o:"Detroit Pistons",sym:"L", ptsT:95, ptsO: 113, rat:.9024},
+		{o:"Cleveland Cavaliers",sym:"W", ptsT:132, ptsO: 98, rat:.9048},
+		{o:"Chicago Bulls",sym:"W", ptsT:125, ptsO: 94, rat:.9070},
+		{o:"Indiana Pacers",sym:"W", ptsT:122, ptsO: 110, rat:.9091},
+		{o:"San Antonio Spurs",sym:"W", ptsT:120, ptsO: 90, rat:.9111},
+		{o:"Dallas Mavericks",sym:"W", ptsT:127, ptsO: 107, rat:.9130},
+		{o:"Philadelphia 76ers",sym:"W", ptsT:108, ptsO: 105, rat:.9149},
+		{o:"New York Knicks",sym:"W", ptsT:116, ptsO: 95, rat:.9167},
+		{o:"Washington Wizards",sym:"W", ptsT:134, ptsO: 121, rat:.9184},
+		{o:"Oklahoma City Thunder",sym:"W", ptsT:116, ptsO: 108, rat:.9200},
+		{o:"Houston Rockets",sym:"W", ptsT:123, ptsO: 110, rat:.9216},
+		{o:"Phoenix Suns",sym:"W", ptsT:112, ptsO: 104, rat:.9231},
+		{o:"Portland Trail Blazers",sym:"L", ptsT:105, ptsO: 137, rat:.9057},
+		{o:"Los Angeles Clippers",sym:"W", ptsT:115, ptsO: 112, rat:.9074},
+		{o:"Atlanta Hawks",sym:"W", ptsT:102, ptsO: 92, rat:.9091},
+		{o:"Miami Heat",sym:"W", ptsT:118, ptsO: 112, rat:.9107},
+		{o:"Orlando Magic",sym:"W", ptsT:130, ptsO: 114, rat:.9123},
+		{o:"Oklahoma City Thunder",sym:"W", ptsT:121, ptsO: 118, rat:.9138},
+		{o:"Atlanta Hawks",sym:"W", ptsT:105, ptsO: 109, rat:.9153},
+		{o:"Oklahoma City Thunder",sym:"W", ptsT:106, ptsO: 121, rat:.9167},
+		{o:"Los Angeles Lakers",sym:"L", ptsT:95, ptsO: 112, rat:.9016},
+		{o:"Orlando Magic",sym:"W", ptsT:113, ptsO: 119, rat:.9032}]];
+	
+	var data = [{team:"95 Chicago Bulls",values:[]},
+		{team:"15 Golden State Warriors",values:[]}];
+	var margin = {top:20,bottom:20,left:35,right:30};
+	var cWidth = document.getElementById("svg_container").offsetWidth - margin.left - margin.right;
+	var cHeight = 400;
+	
+	var x = d3.scale.linear()
+		.domain([1,d3.max(recordData,function(d){ return d.length; })])
+		.rangeRound([5,cWidth]);
+	
+	var y = d3.scale.linear()
+		.domain([d3.min(recordData,function(d){ return d3.min(d,function(d){ return d.rat; }); })*.95,d3.max(recordData,function(d){ return d3.max(d,function(d){ return d.rat; }); })])
+		.range([cHeight,0]);
+	
+	var xAxis = d3.svg.axis()
+		.scale(x)
+		.innerTickSize(-cHeight)
+		.orient("bottom");
+	
+	var yAxis = d3.svg.axis()
+		.scale(y)
+		.innerTickSize(-cWidth)
+		.tickFormat(d3.format("%"))
+		.orient("left");
+	
+	var colorP = d3.scale.ordinal()
+		.domain(data.map(function(d){ return d.team; }))
+		.range(["#CE1141","#006BB6"])
+	
+	var colorS = d3.scale.ordinal()
+		.domain(data.map(function(d){ return d.team; }))
+		.range(["#000000","#FDB927"])
+	
+	var line = d3.svg.line()
+		.x(function(d,i){ return x(i+1); })
+		.y(function(d){ return y(d.rat); });
+	
+	var svg = d3.select("svg")
+		.attr("width",cWidth + margin.left + margin.right)
+		.attr("height",cHeight + margin.top + margin.bottom)
+	  .append("g")
+		.attr("transform","translate(" + margin.left + "," + margin.top + ")");
+	
+	svg.append("g")
+		.attr("class","x axis")
+		.attr("transform","translate(0," + cHeight + ")")
+		.call(xAxis)
+	  .append("text")
+		.text("# of Games")
+		.attr("transform","translate(" + (cWidth-55) + ",-2)");
+	
+	svg.append("text")
+		.text("")
+		.attr("transform","translate(" + (cWidth/1.3) + ",-2)")
+	
+	svg.append("g")
+		.attr("class","y axis")
+		.call(yAxis);
+	
+	var teams = svg.selectAll(".team")
+		.data(data)
+	  .enter().append("g")
+		.attr("class",".team");
+	
+	var paths = teams.append("path")
+		.attr("class","line")
+		.attr("d",function(d){ return line(d.values); });
+	
+	var exclude = [];
+	
+	tick(null,0);
+	
+	function tick(d,i){
+		if( recordData[i].length > 0 && exclude.findIndex(function(excl){ return excl === data[i].team }) === -1 ){
+			data[i].values.push(recordData[i][0]);
+			recordData[i].shift();
+			
+			paths.transition()
+				.duration(50)
+				.ease("linear")
+				.attr("d",function(d){ return line(d.values); })
+				.style("stroke",function(d){ return colorP(d.team); })
+				.each("end",tick);
+			
+			var circles = teams.selectAll("circle")
+				.data(function(d){ return d.values; });
+				
+			circles.exit().remove();
+			
+			circles.enter().append("circle")
+				.attr("cx",function(d,i){ return x(i+1); })
+				.attr("cy",function(d){ return y(d.rat); })
+				.attr("r",function(d){ return 4;})
+				.attr("fill","white")
+				.attr("stroke",function(d){ return colorS(d3.select((this).parentNode).data()[0].team); })
+				.on("mouseover",Score)
+				.on("mouseleave",ScoreH);
+		}
+	};
+	function untick(name){
+		var id = 0;
+		
+		for(var i in data)
+			if(data[i].team === name)
+				id = i;
+				
+		for(var i in data[id].values)
+			recordData[id].push(data[id].values[i]);
+			
+		data[id].values = [];
+		
+		paths.attr("d",function(d){ return line(d.values); })
+			.style("stroke",function(d){ return colorP(d.team); });
+			
+		var circles = teams.selectAll("circle")
+				.data(function(d){ return d.values; });
+				
+		circles.exit()
+		  .transition()
+			.duration(500)
+			.style("opacity","0")
+			.remove();
+		exclude.push(name);
+	};
+	
+	function Score(d,i){
+		var tText = d3.select((this).parentNode).data()[0].team;
+		var cText = d.ptsT + " - " + d.ptsO;
+		d3.select(this)
+			.attr("fill",function(d){ return colorS(d3.select((this).parentNode).data()[0].team); });
+
+		d3.select("#home")
+			.text(tText);
+		d3.select("#opp")
+			.text(d.o);
+		d3.select("#score")
+			.text(cText);
+	};
+	function ScoreH(){
+		d3.select(this)
+			.attr("fill","white");
+	};
+	function DrawLine(name){
+		for(var i in data)
+			if(data[i].team === name)
+				if(recordData[i].length === 0){
+					untick(name);
+					if(name === "95 Chicago Bulls"){
+						var button = d3.select("#team_CB");
+						
+						button.style("background-color","#FFF")
+							.style("color","black");
+					}
+					else if(name === "15 Golden State Warriors"){
+						var button = d3.select("#team_GSW");
+						
+						button.style("background-color","#FFF")
+							.style("color","black");
+					}
+				}
+				else if(data[i].values.length === 0){
+					exclude.splice(exclude.findIndex(function(excl){ return excl === name }),1);
+					tick(null,i);
+					if(name === "95 Chicago Bulls"){
+						var button = d3.select("#team_CB");
+						
+						button.style("background-color","#CE1141")
+							.style("color","white");
+					}
+					else if(name === "15 Golden State Warriors"){
+						var button = d3.select("#team_GSW");
+						
+						button.style("background-color","#006BB6")
+							.style("color","white");
+					}
+				}
+	};
+</script>
+</body>
+</html>
