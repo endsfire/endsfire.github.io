@@ -1,0 +1,87 @@
+*{
+	font-family: 'Old Standard TT', serif;
+}
+body{
+	margin: 0;
+	padding: 0;
+	height: 100vh;
+}
+.box{
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+.title_container{
+	margin: 0 auto;
+	text-align:center;
+	background-color: #f0eceb;
+	padding-bottom: .1em;
+	flex: 0 1;
+}
+.title{
+	font-size: 3em;
+	letter-spacing: .1em;
+}
+.title_url_module{
+	cursor: pointer;
+}
+.title_url_module a{
+	color: #283018;
+	text-decoration: none;
+	font-weight: bold;
+}
+#main_container{
+	flex: 1 1;
+	display: flex;
+	flex-direction: column;
+}
+#main_container iframe{
+	flex: 1 1;
+	border: 0;
+}
+#about_container{
+	background: white;
+	width: 90%;
+	margin: 1em auto;
+}
+#about_container p:last-of-type{
+	border-bottom: .1em solid #283018;
+	padding-bottom: .5em;
+}
+#legal_container{
+	text-align: center;
+}
+.module{
+	font-size: 2em;
+	padding: 1em;
+	cursor: pointer;
+	flex-grow: 1;
+}
+.module text{
+	background: #f0eceb;
+	padding: .2em;
+}
+.first{
+	background: linear-gradient(
+      rgba(114, 159, 152, 0.30), 
+      rgba(114, 159, 152, 0.30)
+    ),url(../images/TTrans_XS.png) no-repeat fixed center;
+	background-size: cover;
+}
+.second{
+	background: linear-gradient(
+      rgba(40, 48, 24, 0.30), 
+      rgba(40, 48, 24, 0.30)
+    ),url(../images/GSW_XS.png) no-repeat fixed center;
+	background-size: cover;
+}
+.third{
+	background: linear-gradient(
+      rgba(170, 134, 58, 0.30), 
+      rgba(170, 134, 58, 0.30)
+    ),url(../images/MBChart_XS.png) no-repeat fixed center;
+	background-size: cover;
+}
+.fourth{
+	background-color: #dddddd;
+}

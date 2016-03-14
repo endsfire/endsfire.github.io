@@ -1,0 +1,115 @@
+*{
+	font-family: 'Old Standard TT', serif;
+}
+body{
+	margin: 0;
+	padding: 0;
+	height: 100vh;
+}
+.box{
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+.title_container_back{
+	background-color:#f0eceb;
+	flex: 0 1 auto;
+}
+.title_container{
+	display: -webkit-flex;
+	display: flex;
+	max-width: 1600px;
+	margin: 0 auto;
+}
+.title{
+	font-size: 3em;
+	letter-spacing: .1em;
+	width: 70%;
+}
+.title_url_module{
+	flex: 1;
+	text-align: center;
+	display: flex;
+	display: -webkit-flex;
+	justify-content: center;
+}
+.title_url_module a{
+	display: inline-block;
+	align-self: center;
+	color: #283018;
+	text-decoration: none;
+	font-weight: bold;
+}
+.title_url_module a:hover{
+	background-color: white;
+	padding:1em;
+}
+#main_container{
+	display: flex;
+	display: -webkit-flex;
+	background-color:#f0eceb;
+	flex: 1 1;
+}
+#main_container iframe{
+	flex: 1 1;
+	border: 0;
+}
+#about_container{
+	background: white;
+	width: 100%;
+	padding-top: 2em;
+}
+#about_container p{
+	max-width: 1024px;
+	margin: 0 auto;
+	padding: 1em;
+}
+#about_container p:last-of-type{
+	border-bottom: .1em solid #283018;
+}
+#legal_container{
+	margin: 0 auto;
+	max-width: 1024px;
+	text-align: center;
+	padding-top: 1em;
+}
+.module{
+	font-size: 2em;
+	padding: 1em;
+	cursor: pointer;
+}
+.module text{
+	background: #f0eceb;
+	padding: .2em;
+}
+.module:hover text{
+	background: white;
+}
+.first{
+	flex: 3 1;
+	background: linear-gradient(
+      rgba(114, 159, 152, 0.30), 
+      rgba(114, 159, 152, 0.30)
+    ),url(../images/TTrans_L.png) no-repeat fixed center;
+	background-size: cover;
+}
+.secondary{
+	flex: 1 1;
+}
+.second{
+	background: linear-gradient(
+      rgba(40, 48, 24, 0.30), 
+      rgba(40, 48, 24, 0.30)
+    ),url(../images/GSW_XS.png) no-repeat fixed center;
+	background-size: cover;
+}
+.third{
+	background: linear-gradient(
+      rgba(170, 134, 58, 0.30), 
+      rgba(170, 134, 58, 0.30)
+    ),url(../images/MBChart_XS.png) no-repeat fixed center;
+	background-size: cover;
+}
+.fourth{
+	background-color: #dddddd;
+}
