@@ -194,7 +194,6 @@
 		else{
 			var g = (this).parentNode.__data__.group;
 			index = data.findIndex(function(key){ return key.group === g; });
-			console.log(index);
 			data[index].vals = [{group: data[index].group, val: data[index].value}];
 		}	
 		GenerateBars();
