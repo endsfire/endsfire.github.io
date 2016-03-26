@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<head>
+<style>
+	#main_container{
+		margin: 0 auto;
+		width: 50vw;
+	}
+</style>
+</head>
+<body>
+<script src = "d3/d3.min.js" charset = "utf-8"></script>
+<div id = "main_container">
+	<div>
+		<input type="radio" name = "group" value = "1" onclick="Choice(this)" checked="true">One
+		<input type="radio" name = "group" value = "2" onclick="Choice(this)">Two
+	</div>
+	<div>
+		<svg/>
+	</div>
+</div>
+<script>
+var data1 = [{group:"A", value:4, values:[{letter:"A",val:1},{letter:"B",val:1},{letter:"C",val:2}]},
+	{group:"B", value:5, values:[{letter:"A",val:2},{letter:"B",val:1},{letter:"C",val:2}]},
+	{group:"C", value:6, values:[{letter:"A",val:2},{letter:"B",val:2},{letter:"C",val:2}]},
+	{group:"D", value:3, values:[{letter:"A",val:1},{letter:"B",val:1}]}];
+var data2 = [{group:"A", value:7, values:[{letter:"A",val:3},{letter:"B",val:3},{letter:"C",val:1}]},
+	{group:"B", value:9, values:[{letter:"A",val:3},{letter:"B",val:3},{letter:"C",val:3}]},
+	{group:"C", value:6, values:[{letter:"A",val:3},{letter:"C",val:3}]},
+	{group:"D", value:5, values:[{letter:"A",val:3},{letter:"B",val:1},{letter:"C",val:1}]},
+	{group:"E", value:6, values:[{letter:"A",val:2},{letter:"B",val:2},{letter:"C",val:2}]}];
+	
+var cWidth = document.getElementById("main_container").offsetWidth;
+var cHeight = document.getElementById("main_container").offsetWidth;
+var radius = Math.min(cWidth,cHeight)/2;
+
+var color = d3.scale.category10();
+
+var sColor = d3.scale.ordinal()
+	.range(["#CE1141","#006BB6","#000000","#FDB927"]);
+
+var arc = d3.svg.arc()
+	.outerRadius(radius - 20)
+	.innerRadius(radius - 50);
+
+var sArc = d3.svg.arc()
+	.outerRadius(radius - 55)
+	.innerRadius(radius - 70);
+	
+var pie = d3.layout.pie()
+	.sort(null)
+	.value(function(d){ return d.value; })
+	.startAngle(-Math.PI/2)
+	.endAngle(Math.PI/2);
+
+var sPie = d3.layout.pie()
+	.sort(null)
+	.value(function(d){ return d.val; });
+	
+var svg = d3.select("svg")
+	.attr("width",cWidth)
+	.attr("height",cHeight)
+  .append("g")
+	.attr("transform","translate("+(cWidth/2)+","+(cHeight/2)+")");
+
+var databox = svg.append("g")
+	.attr("class","databox")
+	.attr("transform","translate(-25,0)");
+databox.append("text")
+	.attr("fill","black")
+	.style("font","80px sans-serif")
+	.style("font-weight","bold")
+	.attr("y","11")
+	.attr("x",4)
+	.text("");
+
+DrawChart(data1);
+
+function DrawChart(data){
+	var g = svg.datum(data).selectAll("path")
+		.data(pie,function(d){ return d.data.group; });
+	
+	g.enter().append("path")
+		.attr("fill",function(d){ return color(d.data.group); })
+		.on("mouseover",Display)
+		.on("mouseleave",Hide)
+		.on("click",Secondary)
+		.each(function(d){
+			this._current = d;
+		});
+   
+	g.exit().remove();
+
+	g.transition().duration(750).attrTween("d",arcTween);
+};
+function Display(d){
+	var tempArc = d3.svg.arc()
+		.outerRadius(radius - 10)
+		.innerRadius(radius - 50);
+	
+	d3.select(this)
+		.attr("d",tempArc);
+	d3.select(".databox text")
+		.text(d.value);
+};
+function Hide(d){
+	d3.select(this)
+		.attr("d",arc);
+	d3.select(".databox text")
+		.text("");
+};
+function Secondary(d){
+	sPie.startAngle(d.startAngle)
+		.endAngle(d.endAngle);
+	
+	if(svg.selectAll(".sPath")[0].length === 0)//.remove();
+		var sPath = svg.append("g");
+	else
+		var sPath = svg.selectAll(".sPath");
+	
+	sPath = sPath.attr("class","sPath")
+		.datum(d.data.values)
+	  .selectAll("path")
+		.data(sPie,function(d){ return d.data.letter; });
+	
+	sPath.enter().append("path")
+		.attr("fill",function(d){ return sColor(d.data.letter); })
+		.on("mouseover",S_Display)
+		.on("mouseleave",S_Hide)
+		.each(function(d){
+			this._current = d;
+		});
+		
+	sPath.exit().remove();
+	
+	sPath.transition().duration(500).attrTween("d",sArcTween);
+};
+function S_Display(d){
+	var tempArc = d3.svg.arc()
+		.outerRadius(radius - 55)
+		.innerRadius(radius - 75);
+	
+	d3.select(this)
+		.attr("d",tempArc);
+	d3.select(".databox text")
+		.text(d.value);
+};
+function S_Hide(d){
+	d3.select(this)
+		.attr("d",sArc);
+	d3.select(".databox text")
+		.text("");
+};
+function sArcTween(a){
+	var i = d3.interpolate(this._current,a);
+	this._current = i(0);
+	return function(t){
+		return sArc(i(t));
+	};
+};
+function arcTween(a){
+	var i = d3.interpolate(this._current,a);
+	this._current = i(0);
+	return function(t){
+		return arc(i(t));
+	};
+};
+function Choice(r){
+	if(r.value == 1)
+		DrawChart(data1);
+	else
+		DrawChart(data2);
+};
+</script>
+</body>
+</html>
